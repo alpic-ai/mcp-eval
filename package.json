@@ -1,0 +1,25 @@
+{
+  "name": "mcp-eval",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch",
+    "eval": "vitest --sequence.concurrent"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.6.2",
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "@openai/agents": "^0.0.9",
+    "vitest": "^3.2.4",
+    "zod": "^3.25.67"
+  }
+}

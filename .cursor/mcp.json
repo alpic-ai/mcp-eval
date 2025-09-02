@@ -1,0 +1,10 @@
+{
+    "mcpServers": {
+        "local3": {
+            "command": "node",
+            "args": [
+                "/Users/frederic/Sites/mcp-eval/dist/mcp.js"
+            ]
+        }
+    }
+}
