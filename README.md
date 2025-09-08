@@ -20,7 +20,7 @@ $ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND
 running command...
 $ mcp-eval (--version)
-@alpic-ai/mcp-eval/0.1.0 darwin-arm64 node-v22.17.1
+@alpic-ai/mcp-eval/0.1.1 darwin-arm64 node-v22.17.1
 $ mcp-eval --help [COMMAND]
 USAGE
   $ mcp-eval COMMAND
@@ -65,7 +65,7 @@ EXAMPLES
   hello friend from oclif! (./src/commands/hello/index.ts)
 ```
 
-_See code: [src/commands/hello/index.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.1.0/src/commands/hello/index.ts)_
+_See code: [src/commands/hello/index.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.1.1/src/commands/hello/index.ts)_
 
 ## `mcp-eval hello world`
 
@@ -83,7 +83,7 @@ EXAMPLES
   hello world! (./src/commands/hello/world.ts)
 ```
 
-_See code: [src/commands/hello/world.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.1.0/src/commands/hello/world.ts)_
+_See code: [src/commands/hello/world.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.1.1/src/commands/hello/world.ts)_
 
 ## `mcp-eval help [COMMAND]`
 
