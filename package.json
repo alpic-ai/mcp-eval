@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "author": "Frédéric Barthelet",
   "bin": {
-    "mcp-eval": "./bin/run.js"
+    "@alpic-ai/mcp-eval": "./bin/run.js"
   },
   "bugs": "https://github.com/alpic-ai/mcp-eval/issues",
   "dependencies": {

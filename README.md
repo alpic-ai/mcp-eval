@@ -16,11 +16,11 @@ A CLI to evaluate MCP servers performance
 # Usage
 <!-- usage -->
 ```sh-session
-$ npm install -g mcp-eval
+$ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND
 running command...
 $ mcp-eval (--version)
-mcp-eval/0.1.0 darwin-arm64 node-v22.17.1
+@alpic-ai/mcp-eval/0.1.0 darwin-arm64 node-v22.17.1
 $ mcp-eval --help [COMMAND]
 USAGE
   $ mcp-eval COMMAND
