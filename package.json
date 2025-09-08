@@ -10,8 +10,6 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.5",
     "@oclif/core": "^4",
-    "@oclif/plugin-help": "^6",
-    "@oclif/plugin-plugins": "^5",
     "lodash": "^4.17.21",
     "openai": "^5.19.1",
     "yaml": "^2.8.1",
