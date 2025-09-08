@@ -9,21 +9,25 @@ import { OpenAI } from "openai";
 import { ChatCompletionCreateParams } from "openai/resources";
 import { parse } from "yaml";
 import z from "zod";
+import _ from "lodash";
 
 const TestCaseSchema = z
   .string()
   .transform((rawYmlContent) => parse(rawYmlContent))
   .pipe(
     z.object({
-      test_cases: z.array(
-        z.object({
-          name: z.string(),
-          input_prompt: z.string(),
-          expected_tool_call: z.object({
-            tool_name: z.string(),
-          }),
-        })
-      ),
+      test_cases: z
+        .array(
+          z.object({
+            name: z.string(),
+            input_prompt: z.string(),
+            expected_tool_call: z.object({
+              tool_name: z.string(),
+              parameters: z.record(z.string(), z.unknown()),
+            }),
+          })
+        )
+        .min(1),
     })
   );
 
@@ -81,7 +85,10 @@ export default class Run extends Command {
     const test = testCases[0];
     await this.runTest({
       inputPrompt: test.input_prompt,
-      expectedToolCall: { toolName: test.expected_tool_call.tool_name },
+      expectedToolCall: {
+        toolName: test.expected_tool_call.tool_name,
+        parameters: test.expected_tool_call.parameters,
+      },
       tools,
       openRouterApiKey,
     });
@@ -117,6 +124,7 @@ export default class Run extends Command {
     inputPrompt: string;
     expectedToolCall: {
       toolName: string;
+      parameters: Record<string, unknown>;
     };
     tools: ListToolsResult["tools"];
     openRouterApiKey: string;
@@ -153,6 +161,15 @@ export default class Run extends Command {
     if (toolCall.function.name !== expectedToolCall.toolName) {
       this.error(
         `Expected tool call ${expectedToolCall.toolName} but got ${toolCall.function.name}`
+      );
+    }
+
+    const actualToolParameters = JSON.parse(toolCall.function.arguments);
+    if (!_.isEqual(actualToolParameters, expectedToolCall.parameters)) {
+      this.error(
+        `Expected tool to be called with ${JSON.stringify(
+          expectedToolCall.parameters
+        )} but got ${JSON.stringify(actualToolParameters)}`
       );
     }
 
