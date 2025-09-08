@@ -8,9 +8,13 @@
   },
   "bugs": "https://github.com/alpic-ai/mcp-eval/issues",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5",
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
-    "@oclif/plugin-plugins": "^5"
+    "@oclif/plugin-plugins": "^5",
+    "openai": "^5.19.1",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.5"
   },
   "devDependencies": {
     "@eslint/compat": "^1",
@@ -18,19 +22,18 @@
     "@oclif/test": "^4",
     "@types/chai": "^4",
     "@types/mocha": "^10",
-    "@types/node": "^18",
-    "chai": "^4",
+    "@types/node": "^22.18.1",
     "eslint": "^9",
     "eslint-config-oclif": "^6",
     "eslint-config-prettier": "^10",
-    "mocha": "^10",
     "oclif": "^4",
     "shx": "^0.3.3",
     "ts-node": "^10",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "./bin",
@@ -39,7 +42,11 @@
   ],
   "homepage": "https://github.com/alpic-ai/mcp-eval",
   "keywords": [
-    "oclif"
+    "mcp",
+    "model context protocol",
+    "performance",
+    "evaluation",
+    "test"
   ],
   "license": "MIT",
   "main": "dist/index.js",
@@ -66,7 +73,7 @@
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "pnpm run lint",
     "prepack": "oclif manifest && oclif readme",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "vitest",
     "version": "oclif readme && git add README.md"
   },
   "types": "dist/index.d.ts"
