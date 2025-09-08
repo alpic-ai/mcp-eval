@@ -20,7 +20,7 @@ $ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND
 running command...
 $ mcp-eval (--version)
-@alpic-ai/mcp-eval/0.3.0 darwin-arm64 node-v22.17.1
+@alpic-ai/mcp-eval/0.4.0 darwin-arm64 node-v22.17.1
 $ mcp-eval --help [COMMAND]
 USAGE
   $ mcp-eval COMMAND
@@ -29,32 +29,30 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`mcp-eval run TESTS`](#mcp-eval-run-tests)
+* [`mcp-eval run TESTFILE`](#mcp-eval-run-testfile)
 
-## `mcp-eval run TESTS`
+## `mcp-eval run TESTFILE`
 
-Run the test suite
+Run the test suite described in the provided YAML file.
 
 ```
 USAGE
-  $ mcp-eval run TESTS -u <value> -k <value> [-a anthropic/claude]
+  $ mcp-eval run TESTFILE -u <value> [-a anthropic/claude]
 
 ARGUMENTS
-  TESTS  YML file containing the test suite
+  TESTFILE  YAML file path containing the test suite
 
 FLAGS
-  -a, --assistant=<option>        [default: anthropic/claude] Assistant configuration to use (impact model and system
-                                  prompt)
-                                  <options: anthropic/claude>
-  -k, --openRouterApiKey=<value>  (required) OpenRouter API key to use
-  -u, --url=<value>               (required) URL of the MCP server
+  -a, --assistant=<option>  [default: anthropic/claude] Assistant configuration to use (impact model and system prompt)
+                            <options: anthropic/claude>
+  -u, --url=<value>         (required) URL of the MCP server
 
 DESCRIPTION
-  Run the test suite
+  Run the test suite described in the provided YAML file.
 
 EXAMPLES
   $ mcp-eval run
 ```
 
-_See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.3.0/src/commands/run.ts)_
+_See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.4.0/src/commands/run.ts)_
 <!-- commandsstop -->
