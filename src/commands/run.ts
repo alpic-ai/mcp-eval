@@ -132,6 +132,13 @@ export default class Run extends Command {
           openRouterApiKey,
         });
 
+        this.log(
+          [
+            testCaseAssertionResult.status === "passed" ? "✓" : "×",
+            test.name.length > 50 ? `${test.name.slice(0, 50)}...` : test.name,
+          ].join(" ")
+        );
+
         this.testCaseAssertionResults.push(testCaseAssertionResult);
       })
     );
