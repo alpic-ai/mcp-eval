@@ -59,16 +59,22 @@ type ParametersMismatch = {
 
 export default class Run extends Command {
   private client = new Client({ name: "mcp-eval", version: "0.0.1" });
+  private model = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY,
+  });
   private testCaseAssertionResults: TestCaseAssertionResult[] = [];
 
   static override args = {
-    tests: Args.file({
-      description: "YML file containing the test suite",
+    testFile: Args.file({
+      description: "YAML file path containing the test suite",
       parse: (file) => readFile(file, "utf8"),
+      name: "testFilePath",
       required: true,
     }),
   };
-  static override description = "Run the test suite";
+  static override description =
+    "Run the test suite described in the provided YAML file.";
   static override examples = ["<%= config.bin %> <%= command.id %>"];
   static override flags = {
     assistant: Flags.string({
@@ -83,21 +89,15 @@ export default class Run extends Command {
       description: "URL of the MCP server",
       required: true,
     }),
-    openRouterApiKey: Flags.string({
-      char: "k",
-      description: "OpenRouter API key to use",
-      required: true,
-      env: "OPENROUTER_API_KEY",
-    }),
   };
 
   public async run(): Promise<void> {
     const {
-      args: { tests },
-      flags: { assistant, url, openRouterApiKey },
+      args: { testFile },
+      flags: { assistant, url },
     } = await this.parse(Run);
 
-    const testCaseFileParsingResult = TestCaseSchema.safeParse(tests);
+    const testCaseFileParsingResult = TestCaseSchema.safeParse(testFile);
     if (!testCaseFileParsingResult.success) {
       this.error(
         [
@@ -129,7 +129,6 @@ export default class Run extends Command {
             parameters: test.expected_tool_call.parameters,
           },
           tools,
-          openRouterApiKey,
         });
 
         this.log(
@@ -227,7 +226,6 @@ export default class Run extends Command {
     inputPrompt,
     expectedToolCall,
     tools,
-    openRouterApiKey,
   }: {
     name: string;
     inputPrompt: string;
@@ -236,14 +234,8 @@ export default class Run extends Command {
       parameters: Record<string, unknown>;
     };
     tools: ListToolsResult["tools"];
-    openRouterApiKey: string;
   }): Promise<TestCaseAssertionResult> {
-    const openai = new OpenAI({
-      baseURL: "https://openrouter.ai/api/v1",
-      apiKey: openRouterApiKey,
-    });
-
-    const response = await openai.chat.completions.create({
+    const response = await this.model.chat.completions.create({
       model: "anthropic/claude-3.7-sonnet",
       tools: tools.map(Run.formatToolToMessage),
       messages: [
