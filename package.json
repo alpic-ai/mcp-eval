@@ -68,7 +68,7 @@
   },
   "repository": "alpic-ai/mcp-eval",
   "scripts": {
-    "build": "shx rm -rf dist && tsc -b",
+    "build": "shx rm -rf dist && tsc -b && cp -r src/prompts dist/prompts",
     "lint": "eslint",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "pnpm run lint",
