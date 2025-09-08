@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { ListToolsResult } from "@modelcontextprotocol/sdk/types.js";
 import { Args, Command, Flags } from "@oclif/core";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { OpenAI } from "openai";
@@ -40,19 +40,21 @@ type PassedResult = { status: "passed" };
 type ErrorResult = { status: "error"; errorMessage: string };
 
 type FailedResult = { status: "failed" } & (
-  | NoToolCalledResult
-  | WrongToolCalledResult
-  | WrongToolParametersResult
+  | MessageMismatch
+  | ToolMismatch
+  | ParametersMismatch
 );
 
-type NoToolCalledResult = { actualModelResponse: string };
-type WrongToolCalledResult = {
-  expectedToolName: string;
-  actualToolName: string;
+type MessageMismatch = {
+  type: "message";
+  expected: "tool_call";
+  actual: string;
 };
-type WrongToolParametersResult = {
-  expectedToolParameters: Record<string, unknown>;
-  actualToolParameters: Record<string, unknown>;
+type ToolMismatch = { type: "tool"; expected: string; actual: string };
+type ParametersMismatch = {
+  type: "parameters";
+  expected: Record<string, unknown>;
+  actual: Record<string, unknown>;
 };
 
 export default class Run extends Command {
@@ -134,6 +136,7 @@ export default class Run extends Command {
       })
     );
 
+    await this.exportDetailedTestResults();
     this.printTestResults();
     this.client.close();
     this.exit(0);
@@ -171,20 +174,27 @@ export default class Run extends Command {
         } test(s) failed, for the following reasons:`,
         `   => 💤 ${
           this.testCaseAssertionResults.filter(
-            (test) => test.status === "failed" && "actualModelResponse" in test
+            (test) => test.status === "failed" && test.type === "message"
           ).length
         } test(s) did not trigger any tool call`,
         `   => 🔀 ${
           this.testCaseAssertionResults.filter(
-            (test) => test.status === "failed" && "actualToolName" in test
+            (test) => test.status === "failed" && test.type === "tool"
           ).length
         } test(s) called the wrong tool`,
         `   => 📚 ${
           this.testCaseAssertionResults.filter(
-            (test) => test.status === "failed" && "actualToolParameters" in test
+            (test) => test.status === "failed" && test.type === "parameters"
           ).length
         } test(s) used the wrong set of parameters`,
       ].join("\n")
+    );
+  }
+
+  private async exportDetailedTestResults() {
+    await writeFile(
+      "mcp-eval.json",
+      new Uint8Array(Buffer.from(JSON.stringify(this.testCaseAssertionResults)))
     );
   }
 
@@ -251,7 +261,9 @@ export default class Run extends Command {
       return {
         name,
         status: "failed",
-        actualModelResponse: response.choices[0].message.content!,
+        type: "message",
+        actual: response.choices[0].message.content!,
+        expected: "tool_call",
       };
     }
 
@@ -263,8 +275,9 @@ export default class Run extends Command {
       return {
         name,
         status: "failed",
-        actualToolName,
-        expectedToolName: expectedToolCall.toolName,
+        type: "tool",
+        actual: actualToolName,
+        expected: expectedToolCall.toolName,
       };
     }
 
@@ -278,8 +291,9 @@ export default class Run extends Command {
       return {
         name,
         status: "failed",
-        actualToolParameters,
-        expectedToolParameters: expectedToolCall.parameters,
+        type: "parameters",
+        actual: actualToolParameters,
+        expected: expectedToolCall.parameters,
       };
     }
 
