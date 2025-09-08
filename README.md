@@ -1,4 +1,4 @@
-# mcp-eval
+<h1>mcp-eval</h1>
 
 A CLI to evaluate MCP servers performance
 
@@ -6,17 +6,13 @@ A CLI to evaluate MCP servers performance
 [![Version](https://img.shields.io/npm/v/mcp-eval.svg)](https://npmjs.org/package/mcp-eval)
 [![Downloads/week](https://img.shields.io/npm/dw/mcp-eval.svg)](https://npmjs.org/package/mcp-eval)
 
-- [Quick start](#quick-start)
-- [Requirements](#requirements)
 <!-- toc -->
-* [mcp-eval](#mcp-eval)
 * [Quick start](#quick-start)
 * [Requirements](#requirements)
 * [Usage](#usage)
 * [Commands](#commands)
 * [Test Suite Syntax](#test-suite-syntax)
 <!-- tocstop -->
-- [Test Suite Syntax](#test-suite-syntax)
 
 # Quick start
 
