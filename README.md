@@ -20,7 +20,7 @@ $ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND
 running command...
 $ mcp-eval (--version)
-@alpic-ai/mcp-eval/0.1.1 darwin-arm64 node-v22.17.1
+@alpic-ai/mcp-eval/0.1.2 darwin-arm64 node-v22.17.1
 $ mcp-eval --help [COMMAND]
 USAGE
   $ mcp-eval COMMAND
@@ -29,8 +29,6 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`mcp-eval hello PERSON`](#mcp-eval-hello-person)
-* [`mcp-eval hello world`](#mcp-eval-hello-world)
 * [`mcp-eval help [COMMAND]`](#mcp-eval-help-command)
 * [`mcp-eval plugins`](#mcp-eval-plugins)
 * [`mcp-eval plugins add PLUGIN`](#mcp-eval-plugins-add-plugin)
@@ -42,48 +40,7 @@ USAGE
 * [`mcp-eval plugins uninstall [PLUGIN]`](#mcp-eval-plugins-uninstall-plugin)
 * [`mcp-eval plugins unlink [PLUGIN]`](#mcp-eval-plugins-unlink-plugin)
 * [`mcp-eval plugins update`](#mcp-eval-plugins-update)
-
-## `mcp-eval hello PERSON`
-
-Say hello
-
-```
-USAGE
-  $ mcp-eval hello PERSON -f <value>
-
-ARGUMENTS
-  PERSON  Person to say hello to
-
-FLAGS
-  -f, --from=<value>  (required) Who is saying hello
-
-DESCRIPTION
-  Say hello
-
-EXAMPLES
-  $ mcp-eval hello friend --from oclif
-  hello friend from oclif! (./src/commands/hello/index.ts)
-```
-
-_See code: [src/commands/hello/index.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.1.1/src/commands/hello/index.ts)_
-
-## `mcp-eval hello world`
-
-Say hello world
-
-```
-USAGE
-  $ mcp-eval hello world
-
-DESCRIPTION
-  Say hello world
-
-EXAMPLES
-  $ mcp-eval hello world
-  hello world! (./src/commands/hello/world.ts)
-```
-
-_See code: [src/commands/hello/world.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.1.1/src/commands/hello/world.ts)_
+* [`mcp-eval run TESTS`](#mcp-eval-run-tests)
 
 ## `mcp-eval help [COMMAND]`
 
@@ -394,4 +351,31 @@ DESCRIPTION
 ```
 
 _See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v5.4.46/src/commands/plugins/update.ts)_
+
+## `mcp-eval run TESTS`
+
+Run the test suite
+
+```
+USAGE
+  $ mcp-eval run TESTS -u <value> -k <value> [-a anthropic/claude]
+
+ARGUMENTS
+  TESTS  YML file containing the test suite
+
+FLAGS
+  -a, --assistant=<option>        [default: anthropic/claude] Assistant configuration to use (impact model and system
+                                  prompt)
+                                  <options: anthropic/claude>
+  -k, --openRouterApiKey=<value>  (required) OpenRouter API key to use
+  -u, --url=<value>               (required) URL of the MCP server
+
+DESCRIPTION
+  Run the test suite
+
+EXAMPLES
+  $ mcp-eval run
+```
+
+_See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.1.2/src/commands/run.ts)_
 <!-- commandsstop -->
