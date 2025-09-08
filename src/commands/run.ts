@@ -68,7 +68,18 @@ export default class Run extends Command {
       flags: { assistant, url, openRouterApiKey },
     } = await this.parse(Run);
 
-    const { test_cases: testCases } = TestCaseSchema.parse(tests);
+    const testCaseFileParsingResult = TestCaseSchema.safeParse(tests);
+    if (!testCaseFileParsingResult.success) {
+      this.error(
+        [
+          "Test case file format contains validation error(s):",
+          z.prettifyError(testCaseFileParsingResult.error),
+        ].join("\n")
+      );
+    }
+
+    const testCases = testCaseFileParsingResult.data.test_cases;
+    this.log(`📚 Found ${testCases.length} test case(s)`);
 
     this.log("🔍 Connecting to the MCP server...");
     const client = new Client({ name: "mcp-eval", version: "0.0.1" });
