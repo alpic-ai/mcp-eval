@@ -31,7 +31,34 @@ const TestCaseSchema = z
     })
   );
 
+type TestCaseAssertionResult = {
+  name: string;
+} & (PassedResult | FailedResult | ErrorResult);
+
+type PassedResult = { status: "passed" };
+
+type ErrorResult = { status: "error"; errorMessage: string };
+
+type FailedResult = { status: "failed" } & (
+  | NoToolCalledResult
+  | WrongToolCalledResult
+  | WrongToolParametersResult
+);
+
+type NoToolCalledResult = { actualModelResponse: string };
+type WrongToolCalledResult = {
+  expectedToolName: string;
+  actualToolName: string;
+};
+type WrongToolParametersResult = {
+  expectedToolParameters: Record<string, unknown>;
+  actualToolParameters: Record<string, unknown>;
+};
+
 export default class Run extends Command {
+  private client = new Client({ name: "mcp-eval", version: "0.0.1" });
+  private testCaseAssertionResults: TestCaseAssertionResult[] = [];
+
   static override args = {
     tests: Args.file({
       description: "YML file containing the test suite",
@@ -81,32 +108,84 @@ export default class Run extends Command {
     const testCases = testCaseFileParsingResult.data.test_cases;
     this.log(`📚 Found ${testCases.length} test case(s)`);
 
-    this.log("🔍 Connecting to the MCP server...");
-    const client = new Client({ name: "mcp-eval", version: "0.0.1" });
-    const transport = new StreamableHTTPClientTransport(url);
-    await client.connect(transport);
+    await this.connect({ url });
 
-    const { tools } = await client.listTools();
+    const { tools } = await this.client.listTools();
     this.log(
-      `✅ Connected with ${client.getServerVersion()?.name}. ${
+      `✅ Connected with ${this.client.getServerVersion()?.name}. ${
         tools.length
       } tools found.`
     );
 
-    const test = testCases[0];
-    await this.runTest({
-      inputPrompt: test.input_prompt,
-      expectedToolCall: {
-        toolName: test.expected_tool_call.tool_name,
-        parameters: test.expected_tool_call.parameters,
-      },
-      tools,
-      openRouterApiKey,
-    });
+    await Promise.all(
+      testCases.map(async (test) => {
+        const testCaseAssertionResult = await this.runTest({
+          name: test.name,
+          inputPrompt: test.input_prompt,
+          expectedToolCall: {
+            toolName: test.expected_tool_call.tool_name,
+            parameters: test.expected_tool_call.parameters,
+          },
+          tools,
+          openRouterApiKey,
+        });
 
-    await transport.terminateSession();
-    await client.close();
+        this.testCaseAssertionResults.push(testCaseAssertionResult);
+      })
+    );
+
+    this.printTestResults();
+    this.client.close();
     this.exit(0);
+  }
+
+  private async connect({ url }: { url: URL }) {
+    this.log("🔍 Connecting to the MCP server...");
+    const transport = new StreamableHTTPClientTransport(url);
+    await this.client.connect(transport);
+  }
+
+  private printTestResults() {
+    const passedTests = this.testCaseAssertionResults.filter(
+      ({ status }) => status === "passed"
+    );
+
+    this.log(
+      [
+        "",
+        "---- RESULTS ----",
+        "",
+        `Overall MCP server accuracy: ${Math.round(
+          (100 * passedTests.length) / this.testCaseAssertionResults.length
+        )}%`,
+        "",
+        `✅ ${
+          this.testCaseAssertionResults.filter(
+            ({ status }) => status === "passed"
+          ).length
+        } test(s) passed`,
+        `❌ ${
+          this.testCaseAssertionResults.filter(
+            (test) => test.status === "failed"
+          ).length
+        } test(s) failed, for the following reasons:`,
+        `   => 💤 ${
+          this.testCaseAssertionResults.filter(
+            (test) => test.status === "failed" && "actualModelResponse" in test
+          ).length
+        } test(s) did not trigger any tool call`,
+        `   => 🔀 ${
+          this.testCaseAssertionResults.filter(
+            (test) => test.status === "failed" && "actualToolName" in test
+          ).length
+        } test(s) called the wrong tool`,
+        `   => 📚 ${
+          this.testCaseAssertionResults.filter(
+            (test) => test.status === "failed" && "actualToolParameters" in test
+          ).length
+        } test(s) used the wrong set of parameters`,
+      ].join("\n")
+    );
   }
 
   static formatToolToMessage(
@@ -127,11 +206,13 @@ export default class Run extends Command {
   }
 
   private async runTest({
+    name,
     inputPrompt,
     expectedToolCall,
     tools,
     openRouterApiKey,
   }: {
+    name: string;
     inputPrompt: string;
     expectedToolCall: {
       toolName: string;
@@ -139,7 +220,7 @@ export default class Run extends Command {
     };
     tools: ListToolsResult["tools"];
     openRouterApiKey: string;
-  }) {
+  }): Promise<TestCaseAssertionResult> {
     const openai = new OpenAI({
       baseURL: "https://openrouter.ai/api/v1",
       apiKey: openRouterApiKey,
@@ -166,24 +247,42 @@ export default class Run extends Command {
 
     const toolCall = response.choices[0].message.tool_calls?.[0];
     if (!toolCall || toolCall.type !== "function") {
-      this.error("No tool were called");
+      this.warn("No tool were called");
+      return {
+        name,
+        status: "failed",
+        actualModelResponse: response.choices[0].message.content!,
+      };
     }
 
+    const actualToolName = toolCall.function.name;
     if (toolCall.function.name !== expectedToolCall.toolName) {
-      this.error(
+      this.warn(
         `Expected tool call ${expectedToolCall.toolName} but got ${toolCall.function.name}`
       );
+      return {
+        name,
+        status: "failed",
+        actualToolName,
+        expectedToolName: expectedToolCall.toolName,
+      };
     }
 
     const actualToolParameters = JSON.parse(toolCall.function.arguments);
     if (!_.isEqual(actualToolParameters, expectedToolCall.parameters)) {
-      this.error(
+      this.warn(
         `Expected tool to be called with ${JSON.stringify(
           expectedToolCall.parameters
         )} but got ${JSON.stringify(actualToolParameters)}`
       );
+      return {
+        name,
+        status: "failed",
+        actualToolParameters,
+        expectedToolParameters: expectedToolCall.parameters,
+      };
     }
 
-    this.log("✅ Tool call was successful");
+    return { name, status: "passed" };
   }
 }
