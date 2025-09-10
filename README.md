@@ -55,7 +55,7 @@ $ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND
 running command...
 $ mcp-eval (--version)
-@alpic-ai/mcp-eval/0.5.2 darwin-arm64 node-v22.17.1
+@alpic-ai/mcp-eval/0.6.0 darwin-arm64 node-v22.17.1
 $ mcp-eval --help [COMMAND]
 USAGE
   $ mcp-eval COMMAND
@@ -91,7 +91,7 @@ EXAMPLES
   $ mcp-eval run
 ```
 
-_See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.5.2/src/commands/run.ts)_
+_See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.6.0/src/commands/run.ts)_
 <!-- commandsstop -->
 
 # Test Suite Syntax
