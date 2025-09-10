@@ -105,7 +105,7 @@ Each test requires:
 - `input_prompt`: the initial prompt to send to the assistant from which the response should be evaluated
 - `expected_tool_call`: an object detailing the expected tool to be called with:
   - `tool_name`: the name as advertized by the MCP server of the tool to be called
-  - `parameters`: the expected set of parameters the tool is expected to be called with
+  - `parameters`: the expected set of parameters the tool is expected to be called with. Only these specified properties will be checked during comparison with the actual tool call. Extra properties set by the model will not cause the test to fail.
 
 ```yml
 test_cases:

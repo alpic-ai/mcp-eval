@@ -281,7 +281,11 @@ export default class Run extends Command {
     }
 
     const actualToolParameters = JSON.parse(toolCall.function.arguments);
-    if (!_.isEqual(actualToolParameters, expectedToolCall.parameters)) {
+    if (
+      !Object.entries(expectedToolCall.parameters).every(
+        ([key, value]) => _.isEqual(actualToolParameters[key], value)
+      )
+    ) {
       this.warn(
         `Expected tool to be called with ${JSON.stringify(
           expectedToolCall.parameters
