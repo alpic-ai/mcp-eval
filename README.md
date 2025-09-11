@@ -45,11 +45,12 @@ $ npx -y @alpic-ai/mcp-eval@latest run --url=https://mcp.github.com ./myserver.y
 # Requirements
 
 - Nodejs >= 22
-- StreamableHTTP compatible MCP server
+- StreamableHTTP or SSE compatible public MCP server
 
 # Usage
 
 <!-- usage -->
+
 ```sh-session
 $ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND

@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { ListToolsResult } from "@modelcontextprotocol/sdk/types.js";
 import { Args, Command, Flags } from "@oclif/core";
 import { readFile, writeFile } from "node:fs/promises";
@@ -149,9 +150,24 @@ export default class Run extends Command {
   }
 
   private async connect({ url }: { url: URL }) {
-    this.log("🔍 Connecting to the MCP server...");
-    const transport = new StreamableHTTPClientTransport(url);
-    await this.client.connect(transport);
+    try {
+      this.log("🔍 Connecting to the MCP server over StreamableHTTP...");
+      const streamableTransport = new StreamableHTTPClientTransport(url);
+      await this.client.connect(streamableTransport);
+    } catch (streamableError) {
+      this.log(
+        `❌ Connection failed over StreamableHTTP: ${streamableError}\n🔍 Fallback - Connecting to the MCP server over SSE...`
+      );
+
+      try {
+        const sseTransport = new SSEClientTransport(url);
+        await this.client.connect(sseTransport);
+      } catch (sseError) {
+        this.error(
+          `Failed to connect with either transport method:\n1. Streamable HTTP error: ${streamableError}\n2. SSE error: ${sseError}`
+        );
+      }
+    }
   }
 
   private printTestResults() {
