@@ -1,7 +1,7 @@
 {
   "name": "@alpic-ai/mcp-eval",
   "description": "A CLI to evaluate MCP servers performance",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "author": "Frédéric Barthelet",
   "bin": {
     "@alpic-ai/mcp-eval": "./bin/run.js"
