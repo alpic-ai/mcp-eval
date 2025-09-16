@@ -102,10 +102,12 @@ A test suite file should have a root `test_cases` property with at least one tes
 Each test requires:
 
 - `name`: a convenient name for your test
-- `input_prompt`: the initial prompt to send to the assistant from which the response should be evaluated
+- `input_conversation`: the conversation to send to the assistant. This can be either a single user message or a multi-turn conversation containing both assistant and user messages. It can contain tool calls that already happened during the model thinking process.
 - `expected_tool_call`: an object detailing the expected tool to be called with:
   - `tool_name`: the name as advertized by the MCP server of the tool to be called
   - `parameters`: the expected set of parameters the tool is expected to be called with. Only these specified properties will be checked during comparison with the actual tool call. Extra properties set by the model will not cause the test to fail.
+
+## Simple user message example
 
 ```yml
 test_cases:
@@ -118,4 +120,32 @@ test_cases:
         flyTo: Tokyo
         departureDate: 03/10/2025
         returnDate: 05/10/2025
+```
+
+## Multi-turn conversation example
+
+```yml
+test_cases:
+  - name: "Create issue in frontend team for login bug"
+    input_conversation:
+      - role: user
+        content: "I'm seeing a bug where the login button doesn't work. Can you create an issue for this?"
+      - role: assistant
+        content: "Sure, first let me check which team to assign the issue to. Listing your teams now."
+      - role: tool
+        tool_name: list_teams
+        parameters: {}
+        response: |
+          [
+            {"id": "team_123", "name": "Frontend"},
+            {"id": "team_456", "name": "Backend"}
+          ]
+      - role: assistant
+        content: "Now that I see the available teams, I'll assign the issue to the Frontend team."
+    expected_tool_call:
+      tool_name: "create_issue"
+      parameters:
+        title: "Login button doesn't work"
+        description: "User reports that the login button is not functioning."
+        team_id: "team_123"
 ```

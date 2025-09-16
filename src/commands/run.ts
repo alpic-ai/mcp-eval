@@ -7,10 +7,29 @@ import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { OpenAI } from "openai";
-import { ChatCompletionCreateParams } from "openai/resources";
+import {
+  ChatCompletionCreateParams,
+  ChatCompletionMessageParam,
+} from "openai/resources";
 import { parse } from "yaml";
 import z from "zod";
 import _ from "lodash";
+import { randomUUID } from "node:crypto";
+
+const ToolMessageSchema = z.object({
+  role: z.literal("tool"),
+  tool_name: z.string(),
+  parameters: z.record(z.string(), z.unknown()),
+  response: z.string(),
+});
+
+const ConversationMessageSchema = z.discriminatedUnion("role", [
+  z.object({
+    role: z.enum(["user", "assistant"]),
+    content: z.string(),
+  }),
+  ToolMessageSchema,
+]);
 
 const TestCaseSchema = z
   .string()
@@ -19,14 +38,22 @@ const TestCaseSchema = z
     z.object({
       test_cases: z
         .array(
-          z.object({
-            name: z.string(),
-            input_prompt: z.string(),
-            expected_tool_call: z.object({
-              tool_name: z.string(),
-              parameters: z.record(z.string(), z.unknown()),
-            }),
-          })
+          z
+            .object({
+              name: z.string(),
+              expected_tool_call: z.object({
+                tool_name: z.string(),
+                parameters: z.record(z.string(), z.unknown()),
+              }),
+            })
+            .and(
+              z.union([
+                z.object({ input_prompt: z.string() }),
+                z.object({
+                  input_conversation: z.array(ConversationMessageSchema).min(1),
+                }),
+              ])
+            )
         )
         .min(1),
     })
@@ -56,6 +83,34 @@ type ParametersMismatch = {
   type: "parameters";
   expected: Record<string, unknown>;
   actual: Record<string, unknown>;
+};
+
+const expandToolMessage = (
+  message: z.infer<typeof ToolMessageSchema>
+): ChatCompletionMessageParam[] => {
+  const toolCallId = randomUUID();
+
+  return [
+    {
+      role: "assistant",
+      content: null,
+      tool_calls: [
+        {
+          id: toolCallId,
+          type: "function",
+          function: {
+            name: message.tool_name,
+            arguments: JSON.stringify(message.parameters),
+          },
+        },
+      ],
+    },
+    {
+      role: "tool",
+      tool_call_id: toolCallId,
+      content: message.response,
+    },
+  ];
 };
 
 export default class Run extends Command {
@@ -120,27 +175,66 @@ export default class Run extends Command {
       } tools found.`
     );
 
-    await Promise.all(
-      testCases.map(async (test) => {
-        const testCaseAssertionResult = await this.runTest({
-          name: test.name,
-          inputPrompt: test.input_prompt,
-          expectedToolCall: {
-            toolName: test.expected_tool_call.tool_name,
-            parameters: test.expected_tool_call.parameters,
-          },
-          tools,
-        });
+    let displayInputPromptDeprecationWarning = false;
+    const formattedTestCases = testCases.map((testCase) => {
+      if (!("input_prompt" in testCase)) {
+        return testCase;
+      }
 
-        this.log(
-          [
-            testCaseAssertionResult.status === "passed" ? "✓" : "×",
-            test.name.length > 50 ? `${test.name.slice(0, 50)}...` : test.name,
-          ].join(" ")
+      displayInputPromptDeprecationWarning = true;
+      const { input_prompt, ...rest } = testCase;
+
+      return {
+        ...rest,
+        input_conversation: [{ role: "user" as const, content: input_prompt }],
+      };
+    });
+
+    if (displayInputPromptDeprecationWarning) {
+      this.warn("⚠ input_prompt is deprecated, use input_conversation instead");
+    }
+
+    const allToolMessages = formattedTestCases
+      .map(({ input_conversation }) => input_conversation)
+      .flat()
+      .filter((message) => message.role === "tool");
+    const allAvailableToolNames = tools.map(({ name }) => name);
+
+    allToolMessages.forEach((message) => {
+      if (!allAvailableToolNames.includes(message.tool_name)) {
+        this.error(
+          `Tool referenced in a test case is not available in the MCP server. Referenced tool: ${
+            message.tool_name
+          }. Available tools: ${allAvailableToolNames.join(", ")}`
         );
+      }
+    });
 
-        this.testCaseAssertionResults.push(testCaseAssertionResult);
-      })
+    this.log(["", "---- DETAILS ----", ""].join("\n"));
+
+    await Promise.all(
+      formattedTestCases.map(
+        async ({ name, input_conversation, expected_tool_call }) => {
+          const testCaseAssertionResult = await this.runTest({
+            name,
+            inputConversation: input_conversation,
+            expectedToolCall: {
+              toolName: expected_tool_call.tool_name,
+              parameters: expected_tool_call.parameters,
+            },
+            tools,
+          });
+
+          this.log(
+            [
+              testCaseAssertionResult.status === "passed" ? "✓" : "×",
+              name.length > 50 ? `${name.slice(0, 50)}...` : name,
+            ].join(" ")
+          );
+
+          this.testCaseAssertionResults.push(testCaseAssertionResult);
+        }
+      )
     );
 
     await this.exportDetailedTestResults();
@@ -239,18 +333,24 @@ export default class Run extends Command {
 
   private async runTest({
     name,
-    inputPrompt,
+    inputConversation,
     expectedToolCall,
     tools,
   }: {
     name: string;
-    inputPrompt: string;
+    inputConversation: z.infer<typeof ConversationMessageSchema>[];
     expectedToolCall: {
       toolName: string;
       parameters: Record<string, unknown>;
     };
     tools: ListToolsResult["tools"];
   }): Promise<TestCaseAssertionResult> {
+    const formattedMessages = inputConversation
+      .map((message) =>
+        message.role === "tool" ? expandToolMessage(message) : message
+      )
+      .flat();
+
     const response = await this.model.chat.completions.create({
       model: "anthropic/claude-3.7-sonnet",
       tools: tools.map(Run.formatToolToMessage),
@@ -266,13 +366,12 @@ export default class Run extends Command {
             "utf8"
           ),
         },
-        { role: "user", content: inputPrompt },
+        ...formattedMessages,
       ],
     });
 
     const toolCall = response.choices[0].message.tool_calls?.[0];
     if (!toolCall || toolCall.type !== "function") {
-      this.warn("No tool were called");
       return {
         name,
         status: "failed",
@@ -284,9 +383,6 @@ export default class Run extends Command {
 
     const actualToolName = toolCall.function.name;
     if (toolCall.function.name !== expectedToolCall.toolName) {
-      this.warn(
-        `Expected tool call ${expectedToolCall.toolName} but got ${toolCall.function.name}`
-      );
       return {
         name,
         status: "failed",
@@ -298,15 +394,10 @@ export default class Run extends Command {
 
     const actualToolParameters = JSON.parse(toolCall.function.arguments);
     if (
-      !Object.entries(expectedToolCall.parameters).every(
-        ([key, value]) => _.isEqual(actualToolParameters[key], value)
+      !Object.entries(expectedToolCall.parameters).every(([key, value]) =>
+        _.isEqual(actualToolParameters[key], value)
       )
     ) {
-      this.warn(
-        `Expected tool to be called with ${JSON.stringify(
-          expectedToolCall.parameters
-        )} but got ${JSON.stringify(actualToolParameters)}`
-      );
       return {
         name,
         status: "failed",
