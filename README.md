@@ -7,11 +7,12 @@ A CLI to evaluate MCP servers performance
 [![Downloads/week](https://img.shields.io/npm/dw/mcp-eval.svg)](https://npmjs.org/package/mcp-eval)
 
 <!-- toc -->
-* [Quick start](#quick-start)
-* [Requirements](#requirements)
-* [Usage](#usage)
-* [Commands](#commands)
-* [Test Suite Syntax](#test-suite-syntax)
+
+- [Quick start](#quick-start)
+- [Requirements](#requirements)
+- [Usage](#usage)
+- [Commands](#commands)
+- [Test Suite Syntax](#test-suite-syntax)
 <!-- tocstop -->
 
 # Quick start
@@ -50,6 +51,7 @@ $ npx -y @alpic-ai/mcp-eval@latest run --url=https://mcp.github.com ./myserver.y
 # Usage
 
 <!-- usage -->
+
 ```sh-session
 $ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND
@@ -61,12 +63,14 @@ USAGE
   $ mcp-eval COMMAND
 ...
 ```
+
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-* [`mcp-eval run TESTFILE`](#mcp-eval-run-testfile)
+
+- [`mcp-eval run TESTFILE`](#mcp-eval-run-testfile)
 
 ## `mcp-eval run TESTFILE`
 
@@ -92,7 +96,21 @@ EXAMPLES
 ```
 
 _See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.8.0/src/commands/run.ts)_
+
 <!-- commandsstop -->
+
+# Assistant configuration
+
+You can use the `-a` flag to specify the assistant configuration to use.
+
+Currently, only `anthropic/claude` is supported.
+
+This will impact the model used, the system prompt and the default tools available to the assistant.
+
+## anthropic/claude
+
+- Model: `anthropic/claude-3.7-sonnet`
+- Default tools: `drive_search`, `web_search`
 
 # Test Suite Syntax
 

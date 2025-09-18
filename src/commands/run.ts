@@ -85,6 +85,18 @@ type ParametersMismatch = {
   actual: Record<string, unknown>;
 };
 
+type Assistant = "anthropic/claude";
+const ASSISTANT_CONFIGS: Record<
+  Assistant,
+  { model: string; systemPromptFileName: string; additionalTools: string[] }
+> = {
+  "anthropic/claude": {
+    model: "anthropic/claude-3.7-sonnet",
+    systemPromptFileName: "claude-3.7.md",
+    additionalTools: ["drive_search", "web_search"],
+  },
+};
+
 const expandToolMessage = (
   message: z.infer<typeof ToolMessageSchema>
 ): ChatCompletionMessageParam[] => {
@@ -138,7 +150,7 @@ export default class Run extends Command {
       default: "anthropic/claude",
       description:
         "Assistant configuration to use (impact model and system prompt)",
-      options: ["anthropic/claude"],
+      options: Object.keys(ASSISTANT_CONFIGS),
     }),
     url: Flags.url({
       char: "u",
@@ -152,6 +164,9 @@ export default class Run extends Command {
       args: { testFile },
       flags: { assistant, url },
     } = await this.parse(Run);
+
+    const assistantConfig =
+      ASSISTANT_CONFIGS[assistant as keyof typeof ASSISTANT_CONFIGS];
 
     const testCaseFileParsingResult = TestCaseSchema.safeParse(testFile);
     if (!testCaseFileParsingResult.success) {
@@ -174,6 +189,16 @@ export default class Run extends Command {
         tools.length
       } tools found.`
     );
+
+    if (assistantConfig.additionalTools.length > 0) {
+      this.log(
+        `🔧 Adding ${
+          assistantConfig.additionalTools.length
+        } assistant default tool(s): ${assistantConfig.additionalTools.join(
+          ", "
+        )}`
+      );
+    }
 
     let displayInputPromptDeprecationWarning = false;
     const formattedTestCases = testCases.map((testCase) => {
@@ -210,19 +235,39 @@ export default class Run extends Command {
       }
     });
 
+    const systemPrompt = await readFile(
+      resolve(
+        dirname(fileURLToPath(import.meta.url)),
+        "../prompts",
+        assistantConfig.systemPromptFileName
+      ),
+      "utf8"
+    );
+
     this.log(["", "---- DETAILS ----", ""].join("\n"));
 
     await Promise.all(
       formattedTestCases.map(
         async ({ name, input_conversation, expected_tool_call }) => {
           const testCaseAssertionResult = await this.runTest({
+            model: assistantConfig.model,
+            systemPrompt,
             name,
             inputConversation: input_conversation,
             expectedToolCall: {
               toolName: expected_tool_call.tool_name,
               parameters: expected_tool_call.parameters,
             },
-            tools,
+            tools: [
+              ...tools,
+              ...assistantConfig.additionalTools.map((toolName) => ({
+                name: toolName,
+                description: "",
+                inputSchema: {
+                  type: "object" as const,
+                },
+              })),
+            ],
           });
 
           this.log(
@@ -332,11 +377,15 @@ export default class Run extends Command {
   }
 
   private async runTest({
+    model,
+    systemPrompt,
     name,
     inputConversation,
     expectedToolCall,
     tools,
   }: {
+    model: string;
+    systemPrompt: string;
     name: string;
     inputConversation: z.infer<typeof ConversationMessageSchema>[];
     expectedToolCall: {
@@ -352,19 +401,12 @@ export default class Run extends Command {
       .flat();
 
     const response = await this.model.chat.completions.create({
-      model: "anthropic/claude-3.7-sonnet",
+      model,
       tools: tools.map(Run.formatToolToMessage),
       messages: [
         {
           role: "system",
-          content: await readFile(
-            resolve(
-              dirname(fileURLToPath(import.meta.url)),
-              "../prompts",
-              "claude-3.7.md"
-            ),
-            "utf8"
-          ),
+          content: systemPrompt,
         },
         ...formattedMessages,
       ],
