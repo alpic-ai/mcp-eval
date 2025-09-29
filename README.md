@@ -3,8 +3,8 @@
 A CLI to evaluate MCP servers performance
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/mcp-eval.svg)](https://npmjs.org/package/mcp-eval)
-[![Downloads/week](https://img.shields.io/npm/dw/mcp-eval.svg)](https://npmjs.org/package/mcp-eval)
+[![Version](https://img.shields.io/npm/v/mcp-eval.svg)](https://npmjs.org/package/@alpic-ai/mcp-eval)
+[![Downloads/week](https://img.shields.io/npm/dw/mcp-eval.svg)](https://npmjs.org/package/@alpic-ai/mcp-eval)
 
 <!-- toc -->
 * [Quick start](#quick-start)
