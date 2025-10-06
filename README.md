@@ -7,13 +7,12 @@ A CLI to evaluate MCP servers performance
 [![Downloads/week](https://img.shields.io/npm/dw/mcp-eval.svg)](https://npmjs.org/package/mcp-eval)
 
 <!-- toc -->
-
-- [Quick start](#quick-start)
-- [Requirements](#requirements)
-- [Usage](#usage)
-- [Commands](#commands)
-- [Assistant configuration](#assistant-configuration)
-- [Test Suite Syntax](#test-suite-syntax)
+* [Quick start](#quick-start)
+* [Requirements](#requirements)
+* [Usage](#usage)
+* [Commands](#commands)
+* [Assistant configuration](#assistant-configuration)
+* [Test Suite Syntax](#test-suite-syntax)
 <!-- tocstop -->
 
 # Quick start
@@ -52,26 +51,23 @@ $ npx -y @alpic-ai/mcp-eval@latest run --url=https://mcp.github.com ./myserver.y
 # Usage
 
 <!-- usage -->
-
 ```sh-session
 $ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND
 running command...
 $ mcp-eval (--version)
-@alpic-ai/mcp-eval/0.9.0 darwin-arm64 node-v22.17.1
+@alpic-ai/mcp-eval/0.10.0 darwin-arm64 node-v22.20.0
 $ mcp-eval --help [COMMAND]
 USAGE
   $ mcp-eval COMMAND
 ...
 ```
-
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-
-- [`mcp-eval run TESTFILE`](#mcp-eval-run-testfile)
+* [`mcp-eval run TESTFILE`](#mcp-eval-run-testfile)
 
 ## `mcp-eval run TESTFILE`
 
@@ -79,7 +75,7 @@ Run the test suite described in the provided YAML file.
 
 ```
 USAGE
-  $ mcp-eval run TESTFILE -u <value> [-a anthropic/claude]
+  $ mcp-eval run TESTFILE -u <value> [-a anthropic/claude|openai/chatgpt]
 
 ARGUMENTS
   TESTFILE  YAML file path containing the test suite
@@ -96,8 +92,7 @@ EXAMPLES
   $ mcp-eval run
 ```
 
-_See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.9.0/src/commands/run.ts)_
-
+_See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.10.0/src/commands/run.ts)_
 <!-- commandsstop -->
 
 # Assistant configuration
