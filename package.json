@@ -11,6 +11,7 @@
     "@modelcontextprotocol/sdk": "^1.17.5",
     "@oclif/core": "^4",
     "lodash": "^4.17.21",
+    "mustache": "^4.2.0",
     "openai": "^5.19.1",
     "yaml": "^2.8.1",
     "zod": "^4.1.5"
@@ -22,6 +23,7 @@
     "@types/chai": "^4",
     "@types/lodash": "^4.17.20",
     "@types/mocha": "^10",
+    "@types/mustache": "^4.2.6",
     "@types/node": "^22.18.1",
     "eslint": "^9",
     "eslint-config-oclif": "^6",
@@ -76,5 +78,6 @@
     "test": "vitest",
     "version": "oclif readme && git add README.md"
   },
-  "types": "dist/index.d.ts"
+  "types": "dist/index.d.ts",
+  "packageManager": "pnpm@10.17.1"
 }

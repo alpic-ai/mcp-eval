@@ -15,6 +15,7 @@ import { parse } from "yaml";
 import z from "zod";
 import _ from "lodash";
 import { randomUUID } from "node:crypto";
+import mustache from "mustache";
 
 const ToolMessageSchema = z.object({
   role: z.literal("tool"),
@@ -85,7 +86,7 @@ type ParametersMismatch = {
   actual: Record<string, unknown>;
 };
 
-type Assistant = "anthropic/claude";
+type Assistant = "anthropic/claude" | "openai/chatgpt";
 const ASSISTANT_CONFIGS: Record<
   Assistant,
   { model: string; systemPromptFileName: string; additionalTools: string[] }
@@ -94,6 +95,22 @@ const ASSISTANT_CONFIGS: Record<
     model: "anthropic/claude-3.7-sonnet",
     systemPromptFileName: "claude-3.7.md",
     additionalTools: ["drive_search", "web_search"],
+  },
+  "openai/chatgpt": {
+    model: "openai/gpt-5",
+    systemPromptFileName: "gpt-5.md",
+    additionalTools: [
+      "bio",
+      "automations",
+      "canmore_create_textdoc",
+      "canmore_update_textdoc",
+      "canmore_comment_textdoc",
+      "file_search",
+      "image_gen",
+      "python",
+      "guardian_tool",
+      "web",
+    ],
   },
 };
 
@@ -190,6 +207,10 @@ export default class Run extends Command {
       } tools found.`
     );
 
+    this.log(
+      `🤖 Using ${assistant} assistant with model ${assistantConfig.model}`
+    );
+
     if (assistantConfig.additionalTools.length > 0) {
       this.log(
         `🔧 Adding ${
@@ -235,7 +256,7 @@ export default class Run extends Command {
       }
     });
 
-    const systemPrompt = await readFile(
+    const systemPromptTemplate = await readFile(
       resolve(
         dirname(fileURLToPath(import.meta.url)),
         "../prompts",
@@ -243,6 +264,11 @@ export default class Run extends Command {
       ),
       "utf8"
     );
+
+    const systemPrompt = mustache.render(systemPromptTemplate, {
+      userLocation: "San Francisco, CA, USA",
+      currentDateTime: new Date().toISOString().slice(0, 10),
+    });
 
     this.log(["", "---- DETAILS ----", ""].join("\n"));
 
@@ -262,7 +288,7 @@ export default class Run extends Command {
               ...tools,
               ...assistantConfig.additionalTools.map((toolName) => ({
                 name: toolName,
-                description: "",
+                description: toolName,
                 inputSchema: {
                   type: "object" as const,
                 },
@@ -369,8 +395,8 @@ export default class Run extends Command {
         description: tool.description,
         parameters: {
           type: "object",
-          properties: tool.inputSchema["properties"],
-          required: tool.inputSchema["required"],
+          properties: tool.inputSchema["properties"] ?? {},
+          required: tool.inputSchema["required"] ?? [],
         },
       },
     };

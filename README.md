@@ -7,12 +7,13 @@ A CLI to evaluate MCP servers performance
 [![Downloads/week](https://img.shields.io/npm/dw/mcp-eval.svg)](https://npmjs.org/package/mcp-eval)
 
 <!-- toc -->
-* [Quick start](#quick-start)
-* [Requirements](#requirements)
-* [Usage](#usage)
-* [Commands](#commands)
-* [Assistant configuration](#assistant-configuration)
-* [Test Suite Syntax](#test-suite-syntax)
+
+- [Quick start](#quick-start)
+- [Requirements](#requirements)
+- [Usage](#usage)
+- [Commands](#commands)
+- [Assistant configuration](#assistant-configuration)
+- [Test Suite Syntax](#test-suite-syntax)
 <!-- tocstop -->
 
 # Quick start
@@ -51,6 +52,7 @@ $ npx -y @alpic-ai/mcp-eval@latest run --url=https://mcp.github.com ./myserver.y
 # Usage
 
 <!-- usage -->
+
 ```sh-session
 $ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND
@@ -62,12 +64,14 @@ USAGE
   $ mcp-eval COMMAND
 ...
 ```
+
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-* [`mcp-eval run TESTFILE`](#mcp-eval-run-testfile)
+
+- [`mcp-eval run TESTFILE`](#mcp-eval-run-testfile)
 
 ## `mcp-eval run TESTFILE`
 
@@ -82,7 +86,7 @@ ARGUMENTS
 
 FLAGS
   -a, --assistant=<option>  [default: anthropic/claude] Assistant configuration to use (impact model and system prompt)
-                            <options: anthropic/claude>
+                            <options: anthropic/claude|openai/chatgpt>
   -u, --url=<value>         (required) URL of the MCP server
 
 DESCRIPTION
@@ -93,13 +97,14 @@ EXAMPLES
 ```
 
 _See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.9.0/src/commands/run.ts)_
+
 <!-- commandsstop -->
 
 # Assistant configuration
 
 You can use the `-a` flag to specify the assistant configuration to use.
 
-Currently, only `anthropic/claude` is supported.
+Currently, both `anthropic/claude` and `openai/chatgpt` are supported.
 
 This will impact the model used, the system prompt and the default tools available to the assistant.
 
@@ -107,6 +112,11 @@ This will impact the model used, the system prompt and the default tools availab
 
 - Model: `anthropic/claude-3.7-sonnet`
 - Default tools: `drive_search`, `web_search`
+
+## openai/chatgpt
+
+- Model: `openai/gpt-5`
+- Default tools: `bio`, `automations`, `canmore_create_textdoc`, `canmore_update_textdoc`, `canmore_comment_textdoc`, `file_search`, `image_gen`, `python`, `guardian_tool`, `web`
 
 # Test Suite Syntax
 
