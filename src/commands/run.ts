@@ -145,12 +145,41 @@ export default class Run extends Command {
       description: "URL of the MCP server",
       required: true,
     }),
+    header: Flags.string({
+      char: "h",
+      description: "Custom headers to send with requests (format: 'Header: value')",
+      multiple: true,
+    }),
   };
+
+  private static parseHeaders(headerStrings?: string[]): HeadersInit | undefined {
+    if (!headerStrings || headerStrings.length === 0) {
+      return undefined;
+    }
+
+    return Object.fromEntries(
+      headerStrings.map((headerString) => {
+        const colonIndex = headerString.indexOf(':');
+        if (colonIndex === -1) {
+          throw new Error(`Invalid header format: "${headerString}". Expected format: "Header: value"`);
+        }
+
+        const key = headerString.slice(0, colonIndex).trim();
+        const value = headerString.slice(colonIndex + 1).trim();
+
+        if (!key) {
+          throw new Error(`Invalid header format: "${headerString}". Header name cannot be empty`);
+        }
+
+        return [key, value];
+      })
+    );
+  }
 
   public async run(): Promise<void> {
     const {
       args: { testFile },
-      flags: { assistant, url },
+      flags: { assistant, url, header },
     } = await this.parse(Run);
 
     const testCaseFileParsingResult = TestCaseSchema.safeParse(testFile);
@@ -166,7 +195,8 @@ export default class Run extends Command {
     const testCases = testCaseFileParsingResult.data.test_cases;
     this.log(`📚 Found ${testCases.length} test case(s)`);
 
-    await this.connect({ url });
+    const headers = Run.parseHeaders(header);
+    await this.connect({ url, headers });
 
     const { tools } = await this.client.listTools();
     this.log(
@@ -243,10 +273,12 @@ export default class Run extends Command {
     this.exit(0);
   }
 
-  private async connect({ url }: { url: URL }) {
+  private async connect({ url, headers }: { url: URL; headers?: HeadersInit }) {
+    const transportOptions = headers ? { requestInit: { headers } } : undefined;
+
     try {
       this.log("🔍 Connecting to the MCP server over StreamableHTTP...");
-      const streamableTransport = new StreamableHTTPClientTransport(url);
+      const streamableTransport = new StreamableHTTPClientTransport(url, transportOptions);
       await this.client.connect(streamableTransport);
     } catch (streamableError) {
       this.log(
@@ -254,7 +286,7 @@ export default class Run extends Command {
       );
 
       try {
-        const sseTransport = new SSEClientTransport(url);
+        const sseTransport = new SSEClientTransport(url, transportOptions);
         await this.client.connect(sseTransport);
       } catch (sseError) {
         this.error(

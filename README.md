@@ -40,6 +40,12 @@ test_cases:
 $ npx -y @alpic-ai/mcp-eval@latest run --url=https://mcp.github.com ./myserver.yml
 ```
 
+For servers requiring authentication, you can pass custom headers:
+
+```
+$ npx -y @alpic-ai/mcp-eval@latest run --url=https://nexus.civic.com/hub/mcp -h "Authorization: Bearer ACCESS_TOKEN" ./myserver.yml
+```
+
 - Et voilà 🎉!
 
 # Requirements
@@ -74,7 +80,7 @@ Run the test suite described in the provided YAML file.
 
 ```
 USAGE
-  $ mcp-eval run TESTFILE -u <value> [-a anthropic/claude]
+  $ mcp-eval run TESTFILE -u <value> [-a anthropic/claude] [-h <value>]
 
 ARGUMENTS
   TESTFILE  YAML file path containing the test suite
@@ -82,13 +88,16 @@ ARGUMENTS
 FLAGS
   -a, --assistant=<option>  [default: anthropic/claude] Assistant configuration to use (impact model and system prompt)
                             <options: anthropic/claude>
+  -h, --header=<value>...   Custom headers to send with requests (format: 'Header: value')
   -u, --url=<value>         (required) URL of the MCP server
 
 DESCRIPTION
   Run the test suite described in the provided YAML file.
 
 EXAMPLES
-  $ mcp-eval run
+  $ mcp-eval run myserver.yml --url=https://mcp.example.com
+
+  $ mcp-eval run myserver.yml --url=https://nexus.civic.com/hub/mcp -h "Authorization: Bearer TOKEN"
 ```
 
 _See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.8.0/src/commands/run.ts)_
