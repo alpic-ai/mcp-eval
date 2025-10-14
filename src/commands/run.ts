@@ -86,7 +86,7 @@ type ParametersMismatch = {
   actual: Record<string, unknown>;
 };
 
-type Assistant = "anthropic/claude" | "openai/chatgpt";
+type Assistant = "anthropic/claude" | "openai/chatgpt" | "mistral/le-chat";
 const ASSISTANT_CONFIGS: Record<
   Assistant,
   { model: string; systemPromptFileName: string; additionalTools: string[] }
@@ -111,6 +111,11 @@ const ASSISTANT_CONFIGS: Record<
       "guardian_tool",
       "web",
     ],
+  },
+  "mistral/le-chat": {
+    model: "mistralai/pixtral-large-2411",
+    systemPromptFileName: "pixtral-large.md",
+    additionalTools: ["web_search", "image_gen", "canvas", "python"],
   },
 };
 
