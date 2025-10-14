@@ -56,7 +56,7 @@ $ npm install -g @alpic-ai/mcp-eval
 $ mcp-eval COMMAND
 running command...
 $ mcp-eval (--version)
-@alpic-ai/mcp-eval/0.10.0 darwin-arm64 node-v22.20.0
+@alpic-ai/mcp-eval/0.11.0 darwin-arm64 node-v22.20.0
 $ mcp-eval --help [COMMAND]
 USAGE
   $ mcp-eval COMMAND
@@ -75,14 +75,14 @@ Run the test suite described in the provided YAML file.
 
 ```
 USAGE
-  $ mcp-eval run TESTFILE -u <value> [-a anthropic/claude|openai/chatgpt]
+  $ mcp-eval run TESTFILE -u <value> [-a anthropic/claude|openai/chatgpt|mistral/le-chat]
 
 ARGUMENTS
   TESTFILE  YAML file path containing the test suite
 
 FLAGS
   -a, --assistant=<option>  [default: anthropic/claude] Assistant configuration to use (impact model and system prompt)
-                            <options: anthropic/claude|openai/chatgpt>
+                            <options: anthropic/claude|openai/chatgpt|mistral/le-chat>
   -u, --url=<value>         (required) URL of the MCP server
 
 DESCRIPTION
@@ -92,7 +92,7 @@ EXAMPLES
   $ mcp-eval run
 ```
 
-_See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.10.0/src/commands/run.ts)_
+_See code: [src/commands/run.ts](https://github.com/alpic-ai/mcp-eval/blob/v0.11.0/src/commands/run.ts)_
 <!-- commandsstop -->
 
 # Assistant configuration
