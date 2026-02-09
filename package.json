@@ -8,7 +8,7 @@
   },
   "bugs": "https://github.com/alpic-ai/mcp-eval/issues",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.5",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@oclif/core": "^4",
     "lodash": "^4.17.21",
     "mustache": "^4.2.0",
